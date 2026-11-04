@@ -65,7 +65,7 @@ function updateSafeArea() {
 }
 
 function toNumber(value: string) {
-  const num = +value
+  const num = Number.parseFloat(value)
   if (Number.isNaN(num))
     return 0
   return num
