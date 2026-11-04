@@ -52,10 +52,10 @@ const safeArea = {
 
 function updateSafeArea() {
   const style = getComputedStyle(anchorEl.value!)
-  safeArea.top.value = style.getPropertyValue('--vueuse-safe-area-top')
-  safeArea.right.value = style.getPropertyValue('--vueuse-safe-area-right')
-  safeArea.bottom.value = style.getPropertyValue('--vueuse-safe-area-bottom')
-  safeArea.left.value = style.getPropertyValue('--vueuse-safe-area-left')
+  safeArea.top.value = style.getPropertyValue('--devframes-safe-area-top')
+  safeArea.right.value = style.getPropertyValue('--devframes-safe-area-right')
+  safeArea.bottom.value = style.getPropertyValue('--devframes-safe-area-bottom')
+  safeArea.left.value = style.getPropertyValue('--devframes-safe-area-left')
 }
 
 function toNumber(value: string) {
