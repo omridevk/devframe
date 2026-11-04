@@ -2,7 +2,7 @@
 import type { DocksContext } from '@devframes/hub/client'
 import type { CSSProperties } from 'vue'
 import type { DockLayout } from './dock-layout'
-import { useEventListener, useScreenSafeArea, whenever } from '@vueuse/core'
+import { useEventListener, whenever } from '@vueuse/core'
 import { computed, onMounted, reactive, ref, useTemplateRef, watch } from 'vue'
 import { BUILTIN_ENTRY_CLIENT_AUTH_NOTICE } from '../../constants'
 import { t } from '../../i18n'
@@ -39,7 +39,30 @@ const layout = computed(() => resolveDockLayout(props.layout))
 
 const isSafari = navigator.userAgent.includes('Safari') && !navigator.userAgent.includes('Chrome')
 
-const safeArea = useScreenSafeArea()
+const anchorEl = useTemplateRef<HTMLDivElement>('anchorEl')
+
+// Port of VueUse's `useScreenSafeArea`, with the variables declared on the
+// dock anchor instead of `<html>`, which SSR hosts hydrate themselves.
+const safeAreaCssVars = {
+  '--vueuse-safe-area-top': 'env(safe-area-inset-top, 0px)',
+  '--vueuse-safe-area-right': 'env(safe-area-inset-right, 0px)',
+  '--vueuse-safe-area-bottom': 'env(safe-area-inset-bottom, 0px)',
+  '--vueuse-safe-area-left': 'env(safe-area-inset-left, 0px)',
+}
+const safeArea = {
+  top: ref(''),
+  right: ref(''),
+  bottom: ref(''),
+  left: ref(''),
+}
+
+function updateSafeArea() {
+  if (!anchorEl.value)
+    return
+  const style = getComputedStyle(anchorEl.value)
+  for (const side of ['top', 'right', 'bottom', 'left'] as const)
+    safeArea[side].value = style.getPropertyValue(`--vueuse-safe-area-${side}`)
+}
 
 function toNumber(value: string) {
   const num = +value
@@ -61,7 +84,6 @@ const panelMargins = computed(() => resolveViewportMargins(
 ))
 
 const dockEl = useTemplateRef<HTMLDivElement>('dockEl')
-const anchorEl = useTemplateRef<HTMLDivElement>('anchorEl')
 
 const recalculateCounter = ref(0)
 const isHovering = ref(false)
@@ -153,10 +175,12 @@ watch(selectedEntry, (entry) => {
 onMounted(async () => {
   windowSize.width = window.innerWidth
   windowSize.height = window.innerHeight
+  updateSafeArea()
 
   useEventListener(window, 'resize', () => {
     windowSize.width = window.innerWidth
     windowSize.height = window.innerHeight
+    updateSafeArea()
   })
 
   useEventListener(window, 'pointermove', (e: PointerEvent) => {
@@ -251,6 +275,7 @@ const isMinimized = computed(() => {
 const anchorStyle = computed<CSSProperties>(() => {
   return {
     ...dockLayoutCssVars(layout.value),
+    ...safeAreaCssVars,
     left: `${anchorPos.value.left}px`,
     top: `${anchorPos.value.top}px`,
     pointerEvents: isHidden.value ? 'none' : 'auto',
