@@ -10,6 +10,7 @@ import { docksSplitGroupsWithCapacity, getEntryGroup, resolveNextRecentDockIds, 
 import { setDocksOverflowPanel, useDocksGroupPanel } from '../../state/floating-tooltip'
 import { useSettings } from '../../state/settings-defaults'
 import { useIsRpcTrusted } from '../../utils/useIsRpcTrusted'
+import { useSafeArea } from '../../utils/useSafeArea'
 import BrandMark from '../icons/BrandMark.vue'
 import {
   dockLayoutCssVars,
@@ -41,22 +42,7 @@ const isSafari = navigator.userAgent.includes('Safari') && !navigator.userAgent.
 
 const anchorEl = useTemplateRef<HTMLDivElement>('anchorEl')
 
-const safeArea = {
-  top: ref(''),
-  right: ref(''),
-  bottom: ref(''),
-  left: ref(''),
-}
-
-function updateSafeArea() {
-  if (!anchorEl.value)
-    return
-  const style = getComputedStyle(anchorEl.value)
-  safeArea.top.value = style.getPropertyValue('--devframes-safe-area-top')
-  safeArea.right.value = style.getPropertyValue('--devframes-safe-area-right')
-  safeArea.bottom.value = style.getPropertyValue('--devframes-safe-area-bottom')
-  safeArea.left.value = style.getPropertyValue('--devframes-safe-area-left')
-}
+const safeArea = useSafeArea(anchorEl)
 
 function toNumber(value: string) {
   const num = Number.parseFloat(value)
@@ -169,12 +155,10 @@ watch(selectedEntry, (entry) => {
 onMounted(async () => {
   windowSize.width = window.innerWidth
   windowSize.height = window.innerHeight
-  updateSafeArea()
 
   useEventListener(window, 'resize', () => {
     windowSize.width = window.innerWidth
     windowSize.height = window.innerHeight
-    updateSafeArea()
   })
 
   useEventListener(window, 'pointermove', (e: PointerEvent) => {
