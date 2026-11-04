@@ -2,7 +2,7 @@
 import type { DocksContext } from '@devframes/hub/client'
 import type { CSSProperties } from 'vue'
 import type { DockLayout } from './dock-layout'
-import { useEventListener, useScreenSafeArea, whenever } from '@vueuse/core'
+import { useEventListener, whenever } from '@vueuse/core'
 import { computed, onMounted, reactive, ref, useTemplateRef, watch } from 'vue'
 import { BUILTIN_ENTRY_CLIENT_AUTH_NOTICE } from '../../constants'
 import { t } from '../../i18n'
@@ -39,7 +39,25 @@ const layout = computed(() => resolveDockLayout(props.layout))
 
 const isSafari = navigator.userAgent.includes('Safari') && !navigator.userAgent.includes('Chrome')
 
-const safeArea = useScreenSafeArea()
+const dockEl = useTemplateRef<HTMLDivElement>('dockEl')
+const anchorEl = useTemplateRef<HTMLDivElement>('anchorEl')
+
+// Device safe-area insets, read from the dock's own anchor (see `style.css`)
+// so the dock never writes styles onto the host page's `<html>`.
+const safeArea = reactive({
+  left: '',
+  top: '',
+  right: '',
+  bottom: '',
+})
+
+function updateSafeArea() {
+  if (!anchorEl.value)
+    return
+  const style = getComputedStyle(anchorEl.value)
+  for (const side of ['left', 'top', 'right', 'bottom'] as const)
+    safeArea[side] = style.getPropertyValue(`--devframes-safe-area-${side}`)
+}
 
 function toNumber(value: string) {
   const num = +value
@@ -52,16 +70,13 @@ function toNumber(value: string) {
 // configured viewport margin. Passed down to the panel so both stay in sync.
 const panelMargins = computed(() => resolveViewportMargins(
   {
-    left: toNumber(safeArea.left.value),
-    top: toNumber(safeArea.top.value),
-    right: toNumber(safeArea.right.value),
-    bottom: toNumber(safeArea.bottom.value),
+    left: toNumber(safeArea.left),
+    top: toNumber(safeArea.top),
+    right: toNumber(safeArea.right),
+    bottom: toNumber(safeArea.bottom),
   },
   layout.value,
 ))
-
-const dockEl = useTemplateRef<HTMLDivElement>('dockEl')
-const anchorEl = useTemplateRef<HTMLDivElement>('anchorEl')
 
 const recalculateCounter = ref(0)
 const isHovering = ref(false)
@@ -153,10 +168,12 @@ watch(selectedEntry, (entry) => {
 onMounted(async () => {
   windowSize.width = window.innerWidth
   windowSize.height = window.innerHeight
+  updateSafeArea()
 
   useEventListener(window, 'resize', () => {
     windowSize.width = window.innerWidth
     windowSize.height = window.innerHeight
+    updateSafeArea()
   })
 
   useEventListener(window, 'pointermove', (e: PointerEvent) => {

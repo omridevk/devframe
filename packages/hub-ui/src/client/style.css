@@ -60,6 +60,10 @@
 #devframes-anchor {
   --uno: w-0 z-floating-anchor fixed origin-center font-sans text-[15px] box-border;
   transform: translate(-50%, -50%) rotate(0);
+  --devframes-safe-area-left: env(safe-area-inset-left, 0px);
+  --devframes-safe-area-top: env(safe-area-inset-top, 0px);
+  --devframes-safe-area-right: env(safe-area-inset-right, 0px);
+  --devframes-safe-area-bottom: env(safe-area-inset-bottom, 0px);
 }
 
 #devframes-anchor #devframes-dock-container {
