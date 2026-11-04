@@ -41,8 +41,6 @@ const isSafari = navigator.userAgent.includes('Safari') && !navigator.userAgent.
 
 const anchorEl = useTemplateRef<HTMLDivElement>('anchorEl')
 
-// Port of VueUse's `useScreenSafeArea`, with the variables declared on the
-// dock stylesheet's `:host` instead of `<html>`, which SSR hosts hydrate themselves.
 const safeArea = {
   top: ref(''),
   right: ref(''),
@@ -51,7 +49,9 @@ const safeArea = {
 }
 
 function updateSafeArea() {
-  const style = getComputedStyle(anchorEl.value!)
+  if (!anchorEl.value)
+    return
+  const style = getComputedStyle(anchorEl.value)
   safeArea.top.value = style.getPropertyValue('--devframes-safe-area-top')
   safeArea.right.value = style.getPropertyValue('--devframes-safe-area-right')
   safeArea.bottom.value = style.getPropertyValue('--devframes-safe-area-bottom')
